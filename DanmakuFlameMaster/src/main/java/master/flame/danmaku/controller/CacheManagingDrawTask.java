@@ -24,7 +24,6 @@ import master.flame.danmaku.danmaku.model.AbsDisplayer;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.DanmakuTimer;
 import master.flame.danmaku.danmaku.model.ICacheManager;
-import master.flame.danmaku.danmaku.model.IDanmakuIterator;
 import master.flame.danmaku.danmaku.model.IDanmakus;
 import master.flame.danmaku.danmaku.model.IDrawingCache;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
@@ -397,11 +396,12 @@ public class CacheManagingDrawTask extends DrawTask {
 
         private boolean push(BaseDanmaku item, int itemSize, boolean forcePush) {
             int size = itemSize; //sizeOf(item);
-            while (mRealSize + size > mMaxSize && mCaches.size() > 0) {
-                BaseDanmaku oldValue = mCaches.first();
+            BaseDanmaku oldValue = mCaches.first();
+            while (mRealSize + size > mMaxSize && oldValue != null) {
                 if (oldValue.isTimeOut()) {
                     entryRemoved(false, oldValue, item);
                     mCaches.removeItem(oldValue);
+                    oldValue = mCaches.first();
                 } else {
                     if (forcePush) {
                         break;
@@ -723,7 +723,7 @@ public class CacheManagingDrawTask extends DrawTask {
                 danmakus.forEach(new IDanmakus.DefaultConsumer<BaseDanmaku>() {
                     @Override
                     public int accept(BaseDanmaku item) {
-                        if (mPause) {
+                        if (mPause || mCancelFlag) {
                             return ACTION_BREAK;
                         }
                         if (!item.hasPassedFilter()) {
